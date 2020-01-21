@@ -116,7 +116,7 @@ Resources:
             AccelerateConfiguration:
                 AccelerationStatus: Enabled
             AccessControl: PublicRead
-            BucketName: !Sub ${ServiceName}-${EnvironmentName}-c395
+            BucketName: !Sub thoud-${ServiceName}-${EnvironmentName}-c395
             VersioningConfiguration:
                 Status: Enabled
             WebsiteConfiguration:
