@@ -11,7 +11,7 @@ jobs:
     - uses: actions/checkout@v1
     - uses: mgenteluci/cloudformation-deploy-action@v1.3.0
       env:
-        TEMPLATE: './template.yaml'
+        TEMPLATE: './cicd/template.yaml'
         CAPABILITIES: CAPABILITY_NAMED_IAM
         AWS_STACK_NAME: 'website-user-production'
         AWS_REGION: 'ap-southeast-2'
