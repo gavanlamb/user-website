@@ -1,0 +1,143 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Stack for cognito
+Parameters:
+    CertificateArn:
+        Type: String
+        Description: Arn of the certificate for cloudfront
+    EnvironmentName:
+        Type: String
+        AllowedValues:
+            - development
+            - integration
+            - testing
+            - staging
+            - production
+        Description: Environment name
+    HostedZoneUrl:
+        Type: String
+        Description: Url of the hosted zone to add subdomain to
+    ServiceName:
+        Type: String
+        Description: Name of the service
+        Default: console
+    UserPoolId:
+        Type: String
+        Description: ID of the userpool to add a user pool client to
+Resources:
+    Client:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            AllowedOAuthFlows:
+                - implicit
+            AllowedOAuthFlowsUserPoolClient: true
+            AllowedOAuthScopes:
+                - phone
+                - email
+                - openid
+                - profile
+            CallbackURLs:
+                - !Sub https://${ServiceName}.${HostedZoneUrl}/login
+                - !Sub https://${ServiceName}.${HostedZoneUrl}/logout
+            ClientName: user-console
+            DefaultRedirectURI: !Sub https://${ServiceName}.${HostedZoneUrl}/login
+            ExplicitAuthFlows:
+                - ALLOW_REFRESH_TOKEN_AUTH
+                - ALLOW_USER_PASSWORD_AUTH
+            GenerateSecret: true
+            LogoutURLs:
+                - !Sub https://${ServiceName}.${HostedZoneUrl}/logout
+            PreventUserExistenceErrors: ENABLED
+            RefreshTokenValidity: 30
+            SupportedIdentityProviders:
+                - COGNITO
+            UserPoolId: !Ref UserPoolId
+    Route53:
+        Type: AWS::Route53::RecordSet
+        Properties:
+            Name: !Sub ${ServiceName}.${HostedZoneUrl}
+            HostedZoneName: !Sub ${HostedZoneUrl}.
+            Type: A
+            AliasTarget:
+                DNSName: !GetAtt CloudFront.DomainName
+                HostedZoneId: Z2FDTNDATAQYW2
+    CloudFront:
+        Type: AWS::CloudFront::Distribution
+        Properties:
+            DistributionConfig:
+                Aliases:
+                    - !Sub ${ServiceName}.${HostedZoneUrl}
+                DefaultCacheBehavior:
+                    AllowedMethods:
+                        - GET
+                        - HEAD
+                        - OPTIONS
+                    CachedMethods:
+                        - GET
+                        - HEAD
+                        - OPTIONS
+                    Compress: true
+                    DefaultTTL: 300
+                    ForwardedValues:
+                        QueryString: true
+                    MaxTTL: 86400
+                    MinTTL: 30
+                    TargetOriginId: !Sub ${ServiceName}-${EnvironmentName}
+                    ViewerProtocolPolicy: redirect-to-https
+                DefaultRootObject: index.html
+                Enabled: true
+                HttpVersion: http2
+                IPV6Enabled: true
+                Origins:
+                    -   DomainName: !GetAtt Bucket.DomainName #!Select [2,  !Split ['/', !GetAtt Bucket.WebsiteURL] ]
+                        Id: !Sub ${ServiceName}-${EnvironmentName}
+                        S3OriginConfig:
+                            OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
+                PriceClass: PriceClass_All
+                ViewerCertificate:
+                    AcmCertificateArn: !Ref CertificateArn
+                    MinimumProtocolVersion: TLSv1
+                    SslSupportMethod: sni-only
+            Tags:
+                -   Key: Environment
+                    Value: !Ref EnvironmentName
+                -   Key: Name
+                    Value: !Ref ServiceName
+                -   Key: Service
+                    Value: !Ref ServiceName
+    CloudFrontOriginAccessIdentity:
+        Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+        Properties:
+            CloudFrontOriginAccessIdentityConfig:
+                Comment: !Sub CloudFront OAI for ${ServiceName}.${HostedZoneUrl}
+    Bucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            AccelerateConfiguration:
+                AccelerationStatus: Enabled
+            AccessControl: PublicRead
+            BucketName: !Sub ${ServiceName}-${EnvironmentName}-c395
+            VersioningConfiguration:
+                Status: Enabled
+            WebsiteConfiguration:
+                ErrorDocument: error.html
+                IndexDocument: index.html
+            Tags:
+                -   Key: Environment
+                    Value: !Ref EnvironmentName
+                -   Key: Name
+                    Value: !Ref ServiceName
+                -   Key: Service
+                    Value: !Ref ServiceName
+    BucketPolicy:
+        Type: AWS::S3::BucketPolicy
+        Properties:
+            Bucket: !Ref Bucket
+            PolicyDocument:
+                Statement:
+                    -   Action:
+                            - s3:GetObject
+                        Effect: Allow
+                        Resource: !Sub arn:aws:s3:::${Bucket}/*
+                        Principal:
+                            CanonicalUser: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
