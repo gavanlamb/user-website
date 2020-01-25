@@ -36,6 +36,8 @@ Resources:
                 - email
                 - openid
                 - profile
+                - !Sub https://notification.${HostedZoneUrl}/delete:notification
+                - !Sub https://notification.${HostedZoneUrl}/fetch:notification
             CallbackURLs:
                 - !Sub https://${ServiceName}.${HostedZoneUrl}/login
                 - !Sub https://${ServiceName}.${HostedZoneUrl}/logout
