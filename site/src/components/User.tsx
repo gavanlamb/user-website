@@ -81,6 +81,8 @@ const User = (props: Props) => {
                         <ClickAwayListener onClickAway={handleClose}>
                             <List aria-label="secondary mailbox folders">
                                 <ListItemLink to="/user/profile" primary="Profile" />
+                                <ListItemLink to="/user/manage" primary="Manage" />
+                                <ListItemLink to="/user/logout" primary="Logout" />
                             </List>
                         </ClickAwayListener>
                     </Paper>
