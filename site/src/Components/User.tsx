@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {
     ClickAwayListener,
     createStyles,
@@ -54,7 +54,7 @@ const User = (props: Props) => {
 
     // return focus to the button when we transitioned from !open -> open
     const prevOpen = React.useRef(open);
-    React.useEffect(() => {
+    useEffect(() => {
         if (prevOpen.current && !open) {
             anchorRef.current!.focus();
         }

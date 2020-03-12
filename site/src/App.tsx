@@ -1,10 +1,13 @@
 import React from 'react';
-import './styles/App.css';
-import CustomAppBar from "./components/CustomAppBar";
+import './Styles/App.css';
 import {BrowserRouter as Router, Route} from 'react-router-dom';
-import Profile from "./components/Profile";
-import Logout from "./components/Logout";
-import Manage from "./components/Manage";
+import CustomAppBar from "./Components/CustomAppBar";
+import Profile from "./Components/Profile";
+import Logout from "./Components/Logout";
+import Manage from "./Components/Manage";
+
+console.log(process.env);
+process.env.NODE_CONFIG_DIR = __dirname + '/Config/';
 
 const App: React.FC = () => {
     return (

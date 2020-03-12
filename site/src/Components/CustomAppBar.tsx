@@ -35,7 +35,7 @@ const CustomAppBar = () => {
                     <Typography variant="h6" className={classes.title}>
                         Thing Cloud
                     </Typography>
-                    <Notification className={classes.menuButton}/>
+                    <Notification />
                     <User className={classes.menuButton} />
                 </Toolbar>
             </AppBar>
